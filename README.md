@@ -16,7 +16,7 @@ with azure-nginx you get:
 
 azure-nginx is 100% Open Source and *not* an official Azure Service.
 
-This project is the first attempt at creating a reliable development framework to allow for a multitude of Open Source projects to run as self reliant services on Azure.
+This project is the first step towards a reliable development framework that allows for a multitude of Open Source projects to run as self reliant services on Azure.
 
 The core components of azure-nginx will be further generalized for that purpose in the future.
 
