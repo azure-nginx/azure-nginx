@@ -1,4 +1,4 @@
-# Azure-NGINX: Deploy self reliant, PaaS-like nginx clusters - WIP
+# Azure-NGINX: Self reliant, PaaS-like nginx clusters - WIP
 
 ## Overview
 
