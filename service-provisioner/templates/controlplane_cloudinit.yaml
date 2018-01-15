@@ -1,0 +1,27 @@
+#cloud-config
+package_update: true
+packages:
+ - golang-go
+
+write_files:
+- path: "/etc/systemd/system/nginxcontrolplane.service"
+  permissions: "0644"
+  owner: "root"
+  content: |
+    [Unit]
+    Description=Azure-nginx Control Plane
+
+    [Service]
+    Restart=always
+    ExecStart=/var/lib/controlplane/cp.linux
+
+    [Install]
+    WantedBy=multi-user.target
+
+runcmd:
+ - sudo mkdir /var/lib/controlplane
+ - sudo wget https://github.com/azure-nginx/azure-nginx/raw/master/releases/latest/controlplane.tar.gz -O /var/lib/controlplane/controlplane.tar.gz
+ - sudo tar -zxvf /var/lib/controlplane/controlplane.tar.gz -C /var/lib/controlplane
+ - sudo chmod 777 /var/lib/controlplane/cp.linux
+ - sudo systemctl enable nginxcontrolplane.service
+ - sudo systemctl start nginxcontrolplane.service

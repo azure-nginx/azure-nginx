@@ -1,0 +1,28 @@
+#cloud-config
+package_update: true
+packages:
+ - nginx
+ - golang-go
+
+write_files:
+- path: "/etc/systemd/system/nginxagent.service"
+  permissions: "0644"
+  owner: "root"
+  content: |
+    [Unit]
+    Description=Azure-nginx Agent
+
+    [Service]
+    Restart=always
+    ExecStart=/var/lib/nginxagent/agent.linux
+
+    [Install]
+    WantedBy=multi-user.target
+
+runcmd:
+ - sudo mkdir /var/lib/nginxagent
+ - sudo wget https://github.com/azure-nginx/azure-nginx/raw/master/releases/latest/nginxagent.tar.gz -O /var/lib/nginxagent/nginxagent.tar.gz
+ - sudo tar -zxvf /var/lib/nginxagent/nginxagent.tar.gz -C /var/lib/nginxagent
+ - sudo chmod 777 /var/lib/nginxagent/agent.linux
+ - sudo systemctl enable nginxagent.service
+ - sudo systemctl start nginxagent.service

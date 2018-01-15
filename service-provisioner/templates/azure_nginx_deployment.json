@@ -1,0 +1,375 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "variables": {
+        "adminUsername": "nginxadmin",
+        "adminPassword": "",
+        "controlPlaneRole": "",
+        "deploymentName": "",
+        "nodesRole": "",
+        "nodeCount": 1,
+        "controlPlaneCount": 1,
+        "virtualNetworkName": "nginxVnet",
+        "addressPrefix": "10.0.0.0/24",
+        "subnet1Name": "Subnet-1",
+        "subnet1Prefix": "10.0.0.0/24",
+        "controlPlaneSku": "",
+        "nodesSku": "",
+        "nodeCustomData": "",
+        "controlPlaneCustomData": "",
+        "publicIPAddressName": "nginxAgentsIP",
+        "controlPlaneIPAddressName": "nginxControlPlanePIP",
+        "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]",
+        "lbName": "nginxLB",
+        "lbID": "[resourceId('Microsoft.Network/loadBalancers', variables('lbName'))]",
+        "lbFEName": "loadBalancerFrontEnd",
+        "lbWebProbeName": "loadBalancerWebProbe",
+        "lbBEAddressPool": "loadBalancerBEAddressPool",
+        "lbFEIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/',variables('lbFEName'))]",
+        "lbBEAddressPoolID": "[concat(variables('lbID'),'/backendAddressPools/',variables('lbBEAddressPool'))]",
+        "lbWebProbeID": "[concat(variables('lbID'),'/probes/',variables('lbWebProbeName'))]",
+        "lbProbeID": "[concat(variables('lbID'),'/probes/tcpProbe')]",
+        "controlPlaneAvailabilitySet": "nginxcontrolplaneset",
+        "controlPlaneInstallScriptPath": "",
+        "nodesAvailabilitySet": "",
+        "subnet1Ref": "[resourceId('Microsoft.Network/virtualNetworks/subnets',variables('virtualNetworkName'),variables('subnet1Name'))]",
+        "Ubuntu": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "16.04.0-LTS",
+            "version": "latest"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Compute/availabilitySets",
+            "name": "[variables('controlPlaneAvailabilitySet')]",
+            "apiVersion": "2016-04-30-preview",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "platformFaultDomainCount": 2,
+                "platformUpdateDomainCount": 2,
+                "managed": true
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(variables('controlPlaneRole'),'nic', copyindex())]",
+            "apiVersion": "2016-03-30",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "cpNicLoop",
+                "count": "[variables('controlPlaneCount')]"
+            },
+            "dependsOn": [
+                "[variables('virtualNetworkName')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('controlPlaneIPAddressName'))]"
+                              },
+                            "subnet": {
+                                "id": "[variables('subnet1Ref')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[concat(variables('controlPlaneRole'), copyIndex())]",
+            "apiVersion": "2016-04-30-preview",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "controlLoop",
+                "count": "[variables('controlPlaneCount')]"
+            },
+            "dependsOn": [
+                "cpNicLoop"
+            ],
+            "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('controlPlaneAvailabilitySet'))]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[variables('controlPlaneSku')]"
+                },
+                "osProfile": {
+                    "computerName": "[concat(variables('controlPlaneRole'), copyIndex())]",
+                    "adminUsername": "[variables('adminUsername')]",
+                    "adminPassword": "[variables('adminPassword')]",
+                    "customData": "[base64(variables('controlPlaneCustomData'))]"
+                },
+                "storageProfile": {
+                    "imageReference": "[variables('Ubuntu')]",
+                    "osDisk": {
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('controlPlaneRole'),'nic', copyindex()))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[variables('virtualNetworkName')]",
+            "apiVersion": "2016-03-30",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('addressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnet1Name')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnet1Prefix')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2017-06-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('publicIPAddressName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[concat(variables('deploymentName'),'mgmt')]"
+                }
+            }
+        },
+        {
+            "apiVersion": "2017-06-01",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('controlPlaneIPAddressName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('deploymentName')]"
+                }
+            }
+        },
+        {
+            "apiVersion": "2017-06-01",
+            "name": "[variables('lbName')]",
+            "type": "Microsoft.Network/loadBalancers",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/',variables('publicIPAddressName'))]"
+            ],
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "[variables('lbFEName')]",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[variables('publicIPAddressID')]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "[variables('lbBEAddressPool')]"
+                    }
+                ],
+                "loadBalancingRules": [
+                    {
+                        "name": "weblb",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[variables('lbFEIPConfigID')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[variables('lbBEAddressPoolID')]"
+                            },
+                            "probe": {
+                                "id": "[variables('lbWebProbeID')]"
+                            },
+                            "protocol": "Tcp",
+                            "frontendPort": 80,
+                            "backendPort": 80,
+                            "enableFloatingIP": false
+                        }
+                    }
+                ],
+                "probes": [
+                    {
+                        "name": "[variables('lbWebProbeName')]",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "port": 80,
+                            "intervalInSeconds": 15,
+                            "numberOfProbes": 2
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets",
+            "name": "[concat(variables('deploymentName'), 'nodesvmss')]",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2017-03-30",
+            "dependsOn": [
+                "[concat('Microsoft.Network/loadBalancers/', variables('lbName'))]",
+                "controlLoop"
+            ],
+            "sku": {
+                "name": "[variables('nodesSku')]",
+                "tier": "Standard",
+                "capacity": "[variables('nodeCount')]"
+            },
+            "properties": {
+                "upgradePolicy": {
+                    "mode": "Automatic"
+                },
+                "virtualMachineProfile": {
+                    "storageProfile": {
+                        "imageReference": {
+                            "publisher": "Canonical",
+                            "offer": "UbuntuServer",
+                            "sku": "16.04-LTS",
+                            "version": "latest"
+                        }
+                    },
+                    "osProfile": {
+                        "computerNamePrefix": "nginxnode",
+                        "adminUsername": "[variables('adminUsername')]",
+                        "adminPassword": "[variables('adminPassword')]",
+                        "customData": "[base64(variables('nodeCustomData'))]"
+                    },
+                    "networkProfile": {
+                        "networkInterfaceConfigurations": [
+                            {
+                                "name": "nic",
+                                "properties": {
+                                    "primary": true,
+                                    "ipConfigurations": [
+                                        {
+                                            "name": "ipconfig",
+                                            "properties": {
+                                                "subnet": {
+                                                    "id": "[variables('subnet1Ref')]"
+                                                },
+                                                "publicipaddressconfiguration": {
+                                                    "name": "pub1",
+                                                    "properties": {
+                                                        "idleTimeoutInMinutes": 15
+                                                    }
+                                                },
+                                                "loadBalancerBackendAddressPools": [
+                                                    {
+                                                        "id": "[variables('lbBEAddressPoolID')]"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    "extensionProfile": {
+                        "extensions": [
+                            {
+                                "type": "Microsoft.Compute/virtualMachines/extensions",
+                                "name": "nodesvmssext",
+                                "properties": {
+                                    "publisher": "Microsoft.OSTCExtensions",
+                                    "type": "CustomScriptForLinux",
+                                    "typeHandlerVersion": "1.5",
+                                    "autoUpgradeMinorVersion": true,
+                                    "settings": {
+                                        "commandToExecute": "[concat('sudo bash -c \"mkdir /var/lib/nginxagent && echo ',reference(resourceId('Microsoft.Network/networkInterfaces', concat(variables('controlPlaneRole'),'nic', 0)),'2016-09-01').ipConfigurations[0].properties.privateIPAddress, ' >> /var/lib/nginxagent/cp_config.txt\"')]"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Insights/autoscaleSettings",
+            "apiVersion": "2015-04-01",
+            "name": "autoscalewad",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachineScaleSets/', variables('deploymentName'), 'nodesvmss')]"
+            ],
+            "properties": {
+                "name": "autoscalewad",
+                "targetResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', variables('deploymentName'), 'nodesvmss')]",
+                "enabled": true,
+                "profiles": [
+                    {
+                        "name": "Profile1",
+                        "capacity": {
+                            "minimum": "1",
+                            "maximum": "100",
+                            "default": "1"
+                        },
+                        "rules": [
+                            {
+                                "metricTrigger": {
+                                    "metricName": "Percentage CPU",
+                                    "metricNamespace": "",
+                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', variables('deploymentName'), 'nodesvmss')]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "PT5M",
+                                    "timeAggregation": "Average",
+                                    "operator": "GreaterThan",
+                                    "threshold": 80
+                                },
+                                "scaleAction": {
+                                    "direction": "Increase",
+                                    "type": "ChangeCount",
+                                    "value": "1",
+                                    "cooldown": "PT1M"
+                                }
+                            },
+                            {
+                                "metricTrigger": {
+                                    "metricName": "Percentage CPU",
+                                    "metricNamespace": "",
+                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', variables('deploymentName'), 'nodesvmss')]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "PT5M",
+                                    "timeAggregation": "Average",
+                                    "operator": "LessThan",
+                                    "threshold": 60
+                                },
+                                "scaleAction": {
+                                    "direction": "Decrease",
+                                    "type": "ChangeCount",
+                                    "value": "1",
+                                    "cooldown": "PT5M"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
