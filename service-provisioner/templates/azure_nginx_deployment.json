@@ -150,7 +150,7 @@
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
                 "dnsSettings": {
-                    "domainNameLabel": "[concat(variables('deploymentName'))]"
+                    "domainNameLabel": "[variables('deploymentName')]"
                 }
             }
         },
@@ -162,7 +162,7 @@
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
                 "dnsSettings": {
-                    "domainNameLabel": "[variables('deploymentName'),'mgmt']"
+                    "domainNameLabel": "[concat(variables('deploymentName'), 'mgmt')]"
                 }
             }
         },
