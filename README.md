@@ -1,4 +1,4 @@
-# Azure-Nginx - Deploy self reliant, PaaS-like nginx clusters on Azure - WIP
+# Azure-NGINX - Deploy self reliant, PaaS-like nginx clusters - WIP
 
 ## Overview
 
@@ -23,6 +23,7 @@ The core components of azure-nginx will be further generalized for that purpose 
 ## Usage
 
 azure-nginx provisions ARM resources through the service-provisioner component, which authenticates with Azure using an SPN.
+
 Once you have the SPN details, you can run the service-provisioner and communicate with it either through a RESTful API or the azure-nginx-cli extension.
 
 ### Create an SPN
