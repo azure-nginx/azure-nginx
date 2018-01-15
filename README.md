@@ -1,4 +1,4 @@
-# Azure-NGINX - Deploy self reliant, PaaS-like nginx clusters - WIP
+# Azure-NGINX: Deploy self reliant, PaaS-like nginx clusters - WIP
 
 ## Overview
 
@@ -59,6 +59,7 @@ The [Azure-CLI extension](https://github.com/azure-nginx/azure-nginx-cli) intera
 ### deploy in a custom vnet
 
 `az nginx deploy --custom-subnet-id "<id-of-custom-subnet>" --name "nginxclusterdemo" --resource-group "nginx-rg" --node-count 2 --node-sku "Standard_D1_V2" --location "eastus"`
+
 
 ## How it works
 
