@@ -14,7 +14,7 @@ type App struct {
 	ControlPlane *NginxControlPlane
 }
 
-var httpPort = "4051"
+var httpPort = "80"
 
 func (a *App) Run() {
 	a.Router = mux.NewRouter()
