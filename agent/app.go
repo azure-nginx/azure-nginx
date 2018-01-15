@@ -34,6 +34,15 @@ func respondWithError(w http.ResponseWriter, code int, message string) {
 	respondWithJSON(w, code, map[string]string{"error": message})
 }
 
+func respondWithFile(w http.ResponseWriter, contents []byte, filename string) {
+	b := bytes.NewBuffer(contents)
+
+	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+	w.Header().Set("Content-Type", "application/octet-stream")
+
+	b.WriteTo(w)
+}
+
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	buffer := &bytes.Buffer{}
 	encoder := json.NewEncoder(buffer)

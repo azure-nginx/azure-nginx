@@ -48,20 +48,18 @@ func (n *NginxControlPlane) GetEndpoints() []common.Endpoint {
 }
 
 func (n *NginxControlPlane) GetConfiguration(w http.ResponseWriter, r *http.Request) {
-	config := ""
-
 	for _, node := range Nodes {
 		if node.Healthy {
 			response, err := http.Get("http://" + node.Address + "/configuration")
 			if err == nil {
 				responseData, _ := ioutil.ReadAll(response.Body)
-				config = string(responseData)
-				break
+				respondWithFile(w, responseData, "nginx.conf")
+				return
 			}
 		}
 	}
 
-	respondWithJSON(w, http.StatusOK, map[string]string{"status:": "ok", "configuration": config})
+	respondWithJSON(w, http.StatusOK, map[string]string{"status:": "error", "message": "nginx.conf file could not be retrieved"})
 }
 
 func (n *NginxControlPlane) UpdateConfiguration(w http.ResponseWriter, r *http.Request) {

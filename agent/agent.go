@@ -207,7 +207,7 @@ func (n *NginxAgent) UpdateConfiguration(w http.ResponseWriter, r *http.Request)
 
 func (n *NginxAgent) GetConfiguration(w http.ResponseWriter, r *http.Request) {
 	config, _ := ioutil.ReadFile(confPath)
-	respondWithJSON(w, http.StatusOK, string(config))
+	respondWithFile(w, config, "nginx.conf")
 }
 
 func (n *NginxAgent) Upgrade(w http.ResponseWriter, r *http.Request) {
