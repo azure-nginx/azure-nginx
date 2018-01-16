@@ -26,6 +26,17 @@ azure-nginx provisions ARM resources through the service-provisioner component, 
 
 Once you have the SPN details, you can run the service-provisioner and communicate with it either through a RESTful API or the azure-nginx-cli extension.
 
+A successful deployment will give the following output:
+```
+{
+  "AdminPassword": "<ssh-password-for-vms>",
+  "AdminUsername": "<ssh-username>",
+  "ManagementPlaneAddress": "<fqdn-for-control-plane>",
+  "ManagementPlaneApiToken": "<api-token-for-control-plane>",
+  "NginxAddress": "<fqdn-for-nginx-servers>"
+}
+```
+
 ### Create an SPN
 
 `az ad sp create-for-rbac --sdk-auth > mycredentials.json`
@@ -56,9 +67,29 @@ The [Azure-CLI extension](https://github.com/azure-nginx/azure-nginx-cli) intera
 
 `az nginx deploy --name "nginxclusterdemo" --resource-group "nginx-rg" --node-count 2 --node-sku "Standard_D1_V2" --location "eastus"`
 
-### deploy in a custom vnet
+#### deploy in a custom vnet
 
 `az nginx deploy --custom-subnet-id "<id-of-custom-subnet>" --name "nginxclusterdemo" --resource-group "nginx-rg" --node-count 2 --node-sku "Standard_D1_V2" --location "eastus"`
+
+
+## Control Plane API
+
+The azure-nginx Control Plane is responsible for managing and upgrading the nginx nodes.
+It exposes a RESTful API that allows for interaction with the control plane and the nodes.
+
+### Authentication
+
+The API expects a "token" header name with the value being the API token you received after your service was deployed.
+
+### Schema
+
+| Endpoint        | Method      | Description               |
+| --------------- | ----------- | ------------------------- |
+| /nodes          | GET         | Get a list of nodes       |
+| /configuration  | GET         | Get nginx.conf file       |
+| /configuration  | POST        | Upload an nginx.conf file |
+| /upgrade        | POST        | Upgrade to latest nginx   |
+| /upgrade/status | GET         | Get upgrade status        |
 
 
 ## How it works
