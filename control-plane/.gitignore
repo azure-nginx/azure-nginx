@@ -2,3 +2,4 @@ debug
 dist
 cp.linux
 controlplane.tar.gz
+control-plane
