@@ -43,7 +43,7 @@ func (n *NginxAgent) RegisterWithControlPlane() {
 	jsonData := map[string]string{"nodeAddress": myHostname + ":4050"}
 	jsonValue, _ := json.Marshal(jsonData)
 
-	req, err := http.NewRequest("POST", "http://"+controlPlaneAddress, bytes.NewBuffer(jsonValue))
+	req, err := http.NewRequest("POST", "http://"+controlPlaneAddress+"/nodes/register", bytes.NewBuffer(jsonValue))
 	req.Header.Set("token", controlPlaneToken)
 	req.Header.Set("Content-Type", "application/json")
 
