@@ -50,7 +50,7 @@ The [Azure-CLI extension](https://github.com/azure-nginx/azure-nginx-cli) intera
 
 #### Install the cli extension: (Make sure your Azure CLI version is at least 2.0.24)
 
-`az extension add --source 'https://github.com/azure-nginx/azure-nginx-cli/dist/azure_nginx_cli-0.0.1-py2.py3-none-any.whl'`
+`az extension add --source 'https://github.com/azure-nginx/azure-nginx-cli/raw/master/dist/azure_nginx_cli-0.0.1-py2.py3-none-any.whl'`
 
 #### Deploy an nginx cluster with 2 nodes in east us
 
