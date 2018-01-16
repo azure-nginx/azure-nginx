@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -69,7 +71,15 @@ func (a *DeploymentManager) Init() {
 	a.initClients()
 }
 
+func tokenGenerator() string {
+	b := make([]byte, 8)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)
+}
+
 func (a *DeploymentManager) CreateControlPlane(jsonParsed *gabs.Container) {
+	apiToken := tokenGenerator()
+
 	yaml, _ := ioutil.ReadFile(controlPlaneCustomDataPath)
 	ymlStr := string(yaml)
 
@@ -78,6 +88,7 @@ func (a *DeploymentManager) CreateControlPlane(jsonParsed *gabs.Container) {
 	variablesResource.Set(ymlStr, "controlPlaneCustomData")
 	variablesResource.Set(controlPlaneSku, "controlPlaneSku")
 	variablesResource.Set(controlPlaneRole, "controlPlaneRole")
+	variablesResource.Set(apiToken, "controlPlaneApiToken")
 }
 
 func escapeSingleLine(escapedStr string) string {

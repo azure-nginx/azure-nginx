@@ -17,6 +17,7 @@
         "nodesSku": "",
         "nodeCustomData": "",
         "controlPlaneCustomData": "",
+        "controlPlaneApiToken": "",
         "publicIPAddressName": "nginxAgentsIP",
         "controlPlaneIPAddressName": "nginxControlPlanePIP",
         "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]",
@@ -72,7 +73,7 @@
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIPAddress": {
                                 "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('controlPlaneIPAddressName'))]"
-                              },
+                            },
                             "subnet": {
                                 "id": "[variables('subnet1Ref')]"
                             }
@@ -119,7 +120,30 @@
                         }
                     ]
                 }
-            }
+            },
+            "resources": [
+                {
+                    "name": "controlplaneextension",
+                    "type": "extensions",
+                    "location": "[resourceGroup().location]",
+                    "apiVersion": "2016-04-30-preview",
+                    "dependsOn": [
+                        "[concat(variables('controlPlaneRole'), copyIndex())]"
+                    ],
+                    "tags": {
+                        "displayName": "controlplaneextension"
+                    },
+                    "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.0",
+                        "autoUpgradeMinorVersion": true,
+                        "protectedSettings": {
+                            "commandToExecute": "[concat('sudo bash -c \"mkdir /var/lib/controlplane && echo ', variables('controlPlaneApiToken'),  ' >> /var/lib/controlplane/apitoken.txt\"')]"
+                        }
+                    }
+                }
+            ]
         },
         {
             "type": "Microsoft.Network/virtualNetworks",
@@ -371,5 +395,19 @@
                 ]
             }
         }
-    ]
+    ],
+    "outputs": {
+        "adminUsername": {
+            "type": "string",
+            "value": "[variables('adminUsername')]"
+        },
+        "adminPassword": {
+            "type": "string",
+            "value": "[variables('adminPassword')]"
+        },
+        "ControlPlaneApiToken": {
+            "type": "string",
+            "value": "[variables('controlPlaneApiToken')]"
+        }
+    }
 }
