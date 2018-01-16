@@ -26,10 +26,11 @@ type DeploymentManager struct {
 }
 
 type DeploymentResponse struct {
-	AdminUsername          string
-	AdminPassword          string
-	ManagementPlaneAddress string
-	NginxAddress           string
+	AdminUsername           string
+	AdminPassword           string
+	ManagementPlaneAddress  string
+	NginxAddress            string
+	ManagementPlaneApiToken string
 }
 
 var (
@@ -77,9 +78,7 @@ func tokenGenerator() string {
 	return fmt.Sprintf("%x", b)
 }
 
-func (a *DeploymentManager) CreateControlPlane(jsonParsed *gabs.Container) {
-	apiToken := tokenGenerator()
-
+func (a *DeploymentManager) CreateControlPlane(jsonParsed *gabs.Container, apiToken string) {
 	yaml, _ := ioutil.ReadFile(controlPlaneCustomDataPath)
 	ymlStr := string(yaml)
 
@@ -142,7 +141,9 @@ func (a *DeploymentManager) DeployNginx(deploymentName string, sku string, nodeC
 	variablesResource.Set(passwordStr, "adminPassword")
 	variablesResource.Set(deploymentName, "deploymentName")
 
-	a.CreateControlPlane(jsonParsed)
+	apiToken := tokenGenerator()
+
+	a.CreateControlPlane(jsonParsed, apiToken)
 	a.CreateNodes(jsonParsed, sku, nodeCount)
 
 	if len(subnetID) > 0 {
@@ -159,7 +160,7 @@ func (a *DeploymentManager) DeployNginx(deploymentName string, sku string, nodeC
 		return response, err
 	}
 
-	depResponse := a.getDeploymentInfo(adminUsername, passwordStr, a.Location, deploymentName)
+	depResponse := a.getDeploymentInfo(adminUsername, passwordStr, a.Location, deploymentName, apiToken)
 
 	_, errChan := deploymentsClient.CreateOrUpdate(a.ResourceGroup, deploymentName, deployment, nil)
 	err = a.onErrorFail(<-errChan)
@@ -171,12 +172,13 @@ func (a *DeploymentManager) DeployNginx(deploymentName string, sku string, nodeC
 	return depResponse, nil
 }
 
-func (a *DeploymentManager) getDeploymentInfo(adminUsername string, adminPassword string, location string, deploymentName string) DeploymentResponse {
+func (a *DeploymentManager) getDeploymentInfo(adminUsername string, adminPassword string, location string, deploymentName string, apiToken string) DeploymentResponse {
 	return DeploymentResponse{
-		ManagementPlaneAddress: deploymentName + "mgmt." + location + ".cloudapp.azure.com",
-		NginxAddress:           deploymentName + "." + location + ".cloudapp.azure.com",
-		AdminUsername:          adminUsername,
-		AdminPassword:          adminPassword,
+		ManagementPlaneAddress:  deploymentName + "mgmt." + location + ".cloudapp.azure.com",
+		NginxAddress:            deploymentName + "." + location + ".cloudapp.azure.com",
+		AdminUsername:           adminUsername,
+		AdminPassword:           adminPassword,
+		ManagementPlaneApiToken: apiToken,
 	}
 }
 

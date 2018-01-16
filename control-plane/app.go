@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/azure-nginx/azure-nginx/common"
 	"github.com/gorilla/mux"
@@ -36,7 +37,8 @@ func (a *App) GetAPIToken() string {
 		panic(error)
 	}
 
-	return string(contents)
+	token := strings.TrimSpace(string(contents))
+	return token
 }
 
 func (a *App) initRoutes() {
