@@ -22,6 +22,7 @@ var (
 	backupPath          = os.Getenv("HOME") + "/nginxagent"
 	confPath            = "/etc/nginx/nginx.conf"
 	controlPlaneAddress = ""
+	controlPlaneToken   = ""
 	nginxAgentPath      = "/var/lib/nginxagent"
 	myHostname, _       = os.Hostname()
 	upgradeCommands     = []string{"sudo add-apt-repository ppa:nginx/stable", "sudo apt-get update", "sudo apt-get -y install nginx"}
@@ -33,30 +34,30 @@ func (n *NginxAgent) ReadControlPlaneAddress() {
 	controlPlaneAddress = strings.TrimSpace(string(addr))
 }
 
+func (n *NginxAgent) ReadControlPlaneAPIToken() {
+	token, _ := ioutil.ReadFile(nginxAgentPath + "/cp_token.txt")
+	controlPlaneToken = strings.TrimSpace(string(token))
+}
+
 func (n *NginxAgent) RegisterWithControlPlane() {
 	jsonData := map[string]string{"nodeAddress": myHostname + ":4050"}
 	jsonValue, _ := json.Marshal(jsonData)
 
-	cpAddress := "http://" + controlPlaneAddress + "/nodes/register"
+	req, err := http.NewRequest("POST", "http://"+controlPlaneAddress, bytes.NewBuffer(jsonValue))
+	req.Header.Set("token", controlPlaneToken)
+	req.Header.Set("Content-Type", "application/json")
 
-	_, err := http.Post(cpAddress, "application/json", bytes.NewBuffer(jsonValue))
+	client := &http.Client{}
+	_, err = client.Do(req)
+
 	if err != nil {
 		common.Log.Println("HTTP call (Registration) to Control Plane failed: " + err.Error())
 	}
 }
 
-func (n *NginxAgent) UpdateControlPlaneWithConfig() {
-	jsonData := map[string]string{"configFile": myHostname}
-	jsonValue, _ := json.Marshal(jsonData)
-
-	_, err := http.Post("http://"+controlPlaneAddress, "application/json", bytes.NewBuffer(jsonValue))
-	if err != nil {
-		common.Log.Println("HTTP call (Config Update) to Control Plane failed: " + err.Error())
-	}
-}
-
 func (n *NginxAgent) MakeSureNginxLives() {
 	n.ReadControlPlaneAddress()
+	n.ReadControlPlaneAPIToken()
 	n.RegisterWithControlPlane()
 	n.CreateBackupDirectory()
 
