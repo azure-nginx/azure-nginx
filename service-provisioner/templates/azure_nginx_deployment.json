@@ -322,7 +322,7 @@
                                     "typeHandlerVersion": "1.5",
                                     "autoUpgradeMinorVersion": true,
                                     "settings": {
-                                        "commandToExecute": "[concat('sudo bash -c \"mkdir /var/lib/nginxagent && echo ',reference(resourceId('Microsoft.Network/networkInterfaces', concat(variables('controlPlaneRole'),'nic', 0)),'2016-09-01').ipConfigurations[0].properties.privateIPAddress, ' >> /var/lib/nginxagent/cp_config.txt\" && echo ', variables('controlPlaneApiToken'), ' >> /var/lib/nginxagent/cp_token.txt')]"
+                                        "commandToExecute": "[concat('sudo bash -c \"mkdir /var/lib/nginxagent && echo ',reference(resourceId('Microsoft.Network/networkInterfaces', concat(variables('controlPlaneRole'),'nic', 0)),'2016-09-01').ipConfigurations[0].properties.privateIPAddress, ' >> /var/lib/nginxagent/cp_config.txt && echo ', variables('controlPlaneApiToken'), ' >> /var/lib/nginxagent/cp_token.txt\"')]"
                                     }
                                 }
                             }
