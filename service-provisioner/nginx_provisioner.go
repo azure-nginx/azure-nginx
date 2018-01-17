@@ -9,12 +9,12 @@ import (
 )
 
 type NginxRequest struct {
-	Name               string `json: "name"`
-	NodeSKU            string `json: "nodeSku"`
-	NodeCount          int    `json: "nodeCount"`
-	ResourceGroup      string `json: "resourceGroup"`
-	Location           string `json: "location"`
-	CustomVNETSubnetID string `json: "customSubnetID"`
+	Name           string `json: "name"`
+	NodeSKU        string `json: "nodeSku"`
+	NodeCount      int    `json: "nodeCount"`
+	ResourceGroup  string `json: "resourceGroup"`
+	Location       string `json: "location"`
+	CustomSubnetId string `json: "customSubnetId"`
 }
 
 type NginxResponse struct {
@@ -53,7 +53,7 @@ func (n *NginxProvisioner) Provision(w http.ResponseWriter, r *http.Request) {
 	n.DeploymentManager.ResourceGroup = request.ResourceGroup
 	n.DeploymentManager.Location = request.Location
 
-	response, err := n.DeploymentManager.DeployNginx(request.Name, request.NodeSKU, request.NodeCount, request.CustomVNETSubnetID)
+	response, err := n.DeploymentManager.DeployNginx(request.Name, request.NodeSKU, request.NodeCount, request.CustomSubnetId)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
