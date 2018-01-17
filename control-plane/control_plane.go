@@ -131,7 +131,7 @@ func (n *NginxControlPlane) CheckIfNodesAreHealthy() {
 					common.Log.Println("Node " + node.Address + " is unhealthy")
 					common.Log.Println(err)
 
-					if Nodes[i].UnhealthyCount > 100 {
+					if Nodes[i].UnhealthyCount > 50 {
 						Nodes = append(Nodes[:i], Nodes[i+1:]...)
 					}
 				} else {
