@@ -149,10 +149,11 @@ func (a *DeploymentManager) DeployNginx(deploymentName string, sku string, nodeC
 	if len(subnetID) > 0 {
 		variablesResource.Set(subnetID, "subnet1Ref")
 		jsonParsed.ArrayRemove(3, "resources")
-		resources.Index(1).Delete("dependsOn")
+		resources.Index(1).ArrayRemove(0, "dependsOn")
 	}
 
 	deploymentJSON := jsonParsed.String()
+	fmt.Println(deploymentJSON)
 	deployment := a.buildDeployment(deploymentJSON)
 	err = a.validateDeployment(a.ResourceGroup, deploymentName, deployment)
 

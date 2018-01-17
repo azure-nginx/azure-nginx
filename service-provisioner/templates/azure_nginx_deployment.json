@@ -63,7 +63,8 @@
                 "count": "[variables('controlPlaneCount')]"
             },
             "dependsOn": [
-                "[variables('virtualNetworkName')]"
+                "[variables('virtualNetworkName')]",
+                "[variables('controlPlaneIPAddressName')]"
             ],
             "properties": {
                 "ipConfigurations": [
