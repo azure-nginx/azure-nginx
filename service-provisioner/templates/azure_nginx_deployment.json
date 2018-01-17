@@ -263,6 +263,7 @@
                 "capacity": "[variables('nodeCount')]"
             },
             "properties": {
+                "overprovision": false,
                 "upgradePolicy": {
                     "mode": "Automatic"
                 },
