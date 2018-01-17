@@ -94,7 +94,7 @@ The API expects a "token" header name with the value being the API token you rec
 
 ## How it works
 
-![diagram](diagram.png)
+![diagram](https://github.com/azure-nginx/azure-nginx/raw/master/diagram.png)
 
 
 
