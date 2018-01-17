@@ -92,6 +92,7 @@ func (n *NginxControlPlane) NodeWantsToRegister(w http.ResponseWriter, r *http.R
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&request); err != nil {
+		common.Log.Println("Node sent invalid payload")
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
@@ -114,7 +115,7 @@ func (n *NginxControlPlane) GetUpgradeStatus(w http.ResponseWriter, r *http.Requ
 }
 
 func (n *NginxControlPlane) CheckIfNodesAreHealthy() {
-	healthTicker := time.NewTicker(time.Second * 5)
+	healthTicker := time.NewTicker(time.Second * 10)
 
 	go func() {
 		for _ = range healthTicker.C {
@@ -131,9 +132,8 @@ func (n *NginxControlPlane) CheckIfNodesAreHealthy() {
 					common.Log.Println(err)
 
 					if Nodes[i].UnhealthyCount > 100 {
-						Nodes = append(Nodes[:1], Nodes[:1+i]...)
+						Nodes = append(Nodes[:i], Nodes[i+1:]...)
 					}
-
 				} else {
 					Nodes[i].UnhealthyCount = 0
 					common.Log.Println("Node " + node.Address + " is healthy")
